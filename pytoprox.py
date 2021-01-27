@@ -1,6 +1,8 @@
 import http.server
 import http.client
 
+__version__ = 1.0.0
+
 DEFAULT_PORT=8080
 DEFAULT_ADDRESS="localhost"
 
@@ -102,7 +104,7 @@ class ProxyServer(http.server.ThreadingHTTPServer):
         super().__init__((addr, port), ProxyRequestHandler)
 
     def serve_forever(self):
-        pprint(f"Pytoprox serving at {self.server_name}:{self.server_port}")
+        pprint(f"Pytoprox v{__version__} serving at {self.server_name}:{self.server_port}")
         super().serve_forever()
 
 if __name__ == "__main__":
