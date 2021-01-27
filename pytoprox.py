@@ -1,7 +1,7 @@
 import http.server
 import http.client
 
-__version__ = 1.0.0
+__version__ = "1.0"
 
 DEFAULT_PORT=8080
 DEFAULT_ADDRESS="localhost"
