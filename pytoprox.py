@@ -1,13 +1,24 @@
-import http.server
-import http.client
+import sys
+
+try:
+    import http.server
+    import http.client
+except ImportError:
+    print("Error while importing needed modules, maybe your version of Python is too old...")
+    sys.exit(1)
+
+if sys.version_info.major != 3 or sys.version_info.minor < 8:
+    print("This script runs only in Python 3.8+, exiting...")
+    sys.exit(1)
+
 
 __version__ = "1.0"
 
-DEFAULT_PORT=8080
-DEFAULT_ADDRESS="localhost"
+DEFAULT_PORT = 8080
+DEFAULT_ADDRESS = "localhost"
 
 pprint = print
-cprint = lambda *x, **y: None
+vprint = lambda *x, **y: None
 
 _units = ["o", "Kio", "Mio", "Gio", "Tio"]
 def display_bytes(amount):
@@ -45,6 +56,7 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
         if body:
             body = self.spoof_download(body)
             self.headers['Content-Length'] = str(len(body.encode()))
+        #downloaded=X is often in path
         self.path = self.spoof_download(self.path)
         self.filter_headers(self.headers)
         vprint(f"Transfering request {hash(self)}")
@@ -55,7 +67,7 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
                          body = body)
             resp = conn.getresponse()
         except Exception as e:
-            pprint(f"An error {e} occurred while getting response")
+            pprint(f"An error occurred while getting response: {e}")
             return
         vprint(f"Received response {hash(self)}")
         self.send_response(resp.status)
