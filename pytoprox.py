@@ -119,9 +119,13 @@ class ProxyServer(http.server.ThreadingHTTPServer):
         pprint(f"Pytoprox v{__version__} serving at {self.server_name}:{self.server_port}")
         super().serve_forever()
 
+
+DESCRIPTION = """HTTP Proxy to spoof downloaded bytes to trackers.
+Launch me and tell your bittorrent client to use this proxy to contact trackers."""
+
 if __name__ == "__main__":
     import argparse
-    argparser = argparse.ArgumentParser()
+    argparser = argparse.ArgumentParser(description = DESCRIPTION)
 
     argparser.add_argument(
         "-p", "--port", type=int, default=DEFAULT_PORT,
