@@ -86,6 +86,7 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
     do_PUT = do_X
     do_DELETE = do_X
     do_OPTIONS = do_X
+    do_CONNECT = do_X
 
     @staticmethod
     def filter_headers(headers):
