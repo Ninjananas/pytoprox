@@ -29,7 +29,10 @@ try:
     import http.server
     import http.client
 except ImportError:
-    print("Error while importing needed modules, maybe your version of Python is too old...")
+    print(
+        "Error while importing needed modules,"
+        " maybe your version of Python is too old..."
+    )
     sys.exit(1)
 
 if sys.version_info.major != 3 or sys.version_info.minor < 8:
@@ -42,10 +45,17 @@ __version__ = "1.0"
 DEFAULT_PORT = 8080
 DEFAULT_ADDRESS = "localhost"
 
+
+def noop(*_, **__) -> None:
+    return
+
+
 pprint = print
-vprint = lambda *x, **y: None
+vprint = noop
 
 _units = ["o", "Kio", "Mio", "Gio", "Tio"]
+
+
 def display_bytes(amount):
     i = 0
     while (x := amount / 1024.) > 1.1:
@@ -57,7 +67,7 @@ def display_bytes(amount):
 class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
     __slots__ = []
 
-    log_request = lambda *x, **y: None
+    log_request = noop
 
     def do_X(self):
         vprint(f"Received request {hash(self)}")
@@ -81,15 +91,15 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
         if body:
             body = self.spoof_download(body)
             self.headers['Content-Length'] = str(len(body.encode()))
-        #downloaded=X is often in path
+        # downloaded=X is often in path
         self.path = self.spoof_download(self.path)
         self.filter_headers(self.headers)
         vprint(f"Transfering request {hash(self)}")
         try:
-            conn.request(method = self.command,
-                         url = self.path,
-                         headers = self.headers,
-                         body = body)
+            conn.request(method=self.command,
+                         url=self.path,
+                         headers=self.headers,
+                         body=body)
             resp = conn.getresponse()
         except Exception as e:
             pprint(f"An error occurred while getting response: {e}")
@@ -115,8 +125,9 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     @staticmethod
     def filter_headers(headers):
-        for k in ("connection", "keep-alive", "proxy-authenticate", "upgrade",
-                  "proxy-authorization", "te", "trailers", "transfer-encoding",):
+        for k in ("connection", "keep-alive", "proxy-authenticate",
+                  "upgrade", "proxy-authorization", "te", "trailers",
+                  "transfer-encoding",):
             del headers[k]
 
     @staticmethod
@@ -130,10 +141,12 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
                     amount = int(part.split("=")[1])
                     if amount:
                         pprint(f"Spoofed {display_bytes(amount)}!")
-                except:
-                    pass
+                except Exception as e:
+                    pprint(
+                        f"An exception {e} occurred during download spoofing!")
                 break
         return "&".join(parts)
+
 
 class ProxyServer(http.server.ThreadingHTTPServer):
     __slots__ = []
@@ -142,16 +155,22 @@ class ProxyServer(http.server.ThreadingHTTPServer):
         super().__init__((addr, port), ProxyRequestHandler)
 
     def serve_forever(self):
-        pprint(f"Pytoprox v{__version__} serving at {self.server_name}:{self.server_port}")
+        pprint(
+            f"Pytoprox v{__version__} serving at"
+            f" {self.server_name}:{self.server_port}"
+        )
         super().serve_forever()
 
 
-DESCRIPTION = """HTTP Proxy to spoof downloaded bytes to trackers.
-Launch me and tell your bittorrent client to use this proxy to contact trackers."""
+DESCRIPTION = (
+    "HTTP Proxy to spoof downloaded bytes to trackers.\n"
+    "Launch me and tell your bittorrent client"
+    " to use this proxy to contact trackers."
+)
 
 if __name__ == "__main__":
     import argparse
-    argparser = argparse.ArgumentParser(description = DESCRIPTION)
+    argparser = argparse.ArgumentParser(description=DESCRIPTION)
 
     argparser.add_argument(
         "-p", "--port", type=int, default=DEFAULT_PORT,
@@ -164,11 +183,11 @@ if __name__ == "__main__":
     argparser.add_argument(
         "-q", "--quiet", action="store_true", default=False,
         dest="quiet",
-        help=f"If set, pytoprox will try to not display anything (default False)")
+        help="If set, pytoprox will try to not display anything")
     argparser.add_argument(
         "-v", "--verbose", action="store_true", default=False,
         dest="verbose",
-        help=f"If set, pytoprox will display additional debug info (default False)")
+        help="If set, pytoprox will display additional debug info")
 
     args = argparser.parse_args()
 
