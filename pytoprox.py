@@ -24,6 +24,7 @@ SOFTWARE.
 """
 
 import sys
+from typing import Union
 
 try:
     import http.server
@@ -50,13 +51,13 @@ def noop(*_, **__) -> None:
     return
 
 
-pprint = print
-vprint = noop
+info = print
+debug = noop
 
 _units = ["o", "Kio", "Mio", "Gio", "Tio"]
 
 
-def display_bytes(amount):
+def display_bytes(amount: Union[int, float]):
     i = 0
     while (x := amount / 1024.) > 1.1:
         i += 1
@@ -69,8 +70,8 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     log_request = noop
 
-    def do_X(self):
-        vprint(f"Received request {hash(self)}")
+    def do_X(self) -> None:
+        debug(f"Received request {hash(self)}")
         if self.path[0] == "/":
             self.path = f"http://{self.headers['Host']}{self.path}"
 
@@ -94,7 +95,7 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
         # downloaded=X is often in path
         self.path = self.spoof_download(self.path)
         self.filter_headers(self.headers)
-        vprint(f"Transfering request {hash(self)}")
+        debug(f"Transfering request {hash(self)}")
         try:
             conn.request(method=self.command,
                          url=self.path,
@@ -102,9 +103,9 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
                          body=body)
             resp = conn.getresponse()
         except Exception as e:
-            pprint(f"An error occurred while getting response: {e}")
+            info(f"An error occurred while getting response: {e}")
             return
-        vprint(f"Received response {hash(self)}")
+        debug(f"Received response {hash(self)}")
         self.send_response(resp.status)
         for k, v in resp.getheaders():
             self.send_header(k, v)
@@ -113,7 +114,7 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.copyfile(resp, self.wfile)
         except BrokenPipeError:
             pass
-        vprint(f"Transfered response {hash(self)}")
+        debug(f"Transfered response {hash(self)}")
 
     do_HEAD = do_X
     do_GET = do_X
@@ -124,7 +125,7 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
     do_CONNECT = do_X
 
     @staticmethod
-    def filter_headers(headers):
+    def filter_headers(headers: dict) -> None:
         for k in ("connection", "keep-alive", "proxy-authenticate",
                   "upgrade", "proxy-authorization", "te", "trailers",
                   "transfer-encoding",):
@@ -140,9 +141,9 @@ class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
                 try:
                     amount = int(part.split("=")[1])
                     if amount:
-                        pprint(f"Spoofed {display_bytes(amount)}!")
+                        info(f"Spoofed {display_bytes(amount)}!")
                 except Exception as e:
-                    pprint(
+                    info(
                         f"An exception {e} occurred during download spoofing!")
                 break
         return "&".join(parts)
@@ -155,7 +156,7 @@ class ProxyServer(http.server.ThreadingHTTPServer):
         super().__init__((addr, port), ProxyRequestHandler)
 
     def serve_forever(self):
-        pprint(
+        info(
             f"Pytoprox v{__version__} serving at"
             f" {self.server_name}:{self.server_port}"
         )
@@ -191,8 +192,8 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    pprint = (lambda *x, **y: None) if args.quiet else print
-    vprint = pprint if args.verbose else (lambda *x, **y: None)
+    info = noop if args.quiet else print
+    debug = info if args.verbose else noop
 
     try:
         ProxyServer(args.address, args.port).serve_forever()
