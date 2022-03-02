@@ -54,7 +54,7 @@ def noop(*_, **__) -> None:
 info = print
 debug = noop
 
-_units = ["o", "Kio", "Mio", "Gio", "Tio"]
+_UNITS = ["B", "KiB", "MiB", "GiB", "TiB"]
 
 
 def display_bytes(amount: Union[int, float]):
@@ -62,7 +62,7 @@ def display_bytes(amount: Union[int, float]):
     while (x := amount / 1024.) > 1.1:
         i += 1
         amount = x
-    return f"{round(amount, 2)} {_units[i]}"
+    return f"{round(amount, 2)} {_UNITS[i]}"
 
 
 class ProxyRequestHandler(http.server.SimpleHTTPRequestHandler):
